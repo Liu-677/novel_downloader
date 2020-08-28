@@ -5,7 +5,7 @@ import os
 import threading
 from queue import Queue
 import time
-
+import re
 
 
 class quanben5:
@@ -32,6 +32,7 @@ class quanben5:
         if head.title.text!=novel_name+self.titleroot:    #This is the homepage of a novel
             info=soup.find('div',attrs={'id':'bookdetail'}).find('div',attrs={'id':'info'}) #get the information of this novel
             name,author=info.h1.text.split('/ ')     #Novel's name author state link and introduction
+            name=name.split()[0]
             state=info.p.span.next_sibling.text
             self.items.append(name)
             link = head.link['href']
@@ -75,6 +76,7 @@ class quanben5:
                 num+=1
             forget+=1
         self.chapters_num=num
+        # print(self.chapter_list[:])
 
     def Download_img(self):        #Download the cover of the novel
         self.img_res=requests.get(self.img,headers=self.header)
@@ -126,6 +128,8 @@ class quanben5:
         while thread_num-last>1:
             thread_num = len(threading.enumerate())
         print("下载完成")
+        if self.isall:
+            self.Merged_chapters()
 
     def Download_Novel(self):
         index_error=self.get_queue()      #judge the index
@@ -138,16 +142,29 @@ class quanben5:
             if self.chapter_queue.empty():
                 print('队列为空')
                 return
-            path = self.Current_dir + '\\' + self.novel_name
-            print('缓存路径：' + path)
-            if os.path.exists(path):      #Create chapter save path
+            # path = self.Current_dir + '\\' + self.novel_name
+            self.save_path = self.Current_dir + '\\'+'novels\\' + self.novel_name + '\\'
+            self.chapters_path = self.save_path + 'chapters'
+            print('缓存路径：' + self.chapters_path)
+            if os.path.exists(self.chapters_path):      #Create chapter save path
                 print('文件夹已存在')
             else:
-                os.makedirs(path)
-                print('成功创建文件夹：' + path)
+                os.makedirs(self.chapters_path)
+                print('成功创建文件夹：' + self.chapters_path)
 
-            self.threads(10)               #Start download
+            self.threads(25)               #Start download
 
+    def Merged_chapters(self):
+        filenames = os.listdir(self.chapters_path)
+        regular = r'\d+'
+        filenames.sort(key=lambda x: int(re.findall(regular, x)[0]))
+        with open(self.save_path+self.novel_name+'.txt', 'w', encoding='utf-8') as novel:
+            for filename in filenames:
+                filepath = self.chapters_path +'\\'+ filename
+                for line in open(filepath, encoding='utf-8'):
+                    novel.writelines(line)
+                novel.write('\n')
+                print('已合并：' + filename)
 
 class Consumer(threading.Thread):
     def __init__(self,chapter_queue,novel_name, *args, **kwargs):
@@ -171,8 +188,9 @@ class Consumer(threading.Thread):
         soup = BeautifulSoup(html, 'lxml')
         contents=soup.find('div',attrs={'id':'readbox'}).find('div',attrs={'id':'content'}).text
         contents=chapter_info[0]+'\n'+'  '+'\n  '.join(contents.split())  #get the chapter's content
-        path = self.Current_dir + '\\' + self.novel_name
-        chapter_name=path + '\\' + chapter_info[2] + chapter_info[0] + '.txt'  #Generate chapter name and save path
+        save_path = self.Current_dir + '\\'+'novels\\' + self.novel_name+'\\'
+        chapters_path=save_path +'chapters'
+        chapter_name=chapters_path+'\\'+ chapter_info[2] + chapter_info[0] + '.txt'  #Generate chapter name and save path
         if os.path.exists(chapter_name):
             print('文件已存在')
         else:
@@ -180,4 +198,6 @@ class Consumer(threading.Thread):
                 f.write(contents)
             print('已下载：' + chapter_info[0]+' 时间：'+time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
 if __name__== '__main__':
-    pass
+    name='临渊行 '
+    print(name)
+    print(name.split()[0])
