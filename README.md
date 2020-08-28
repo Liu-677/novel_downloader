@@ -10,13 +10,13 @@
 
 ​		小说来源我选择的是**全本小说网**，本来想的是多选择几个小说源，不过有点麻烦，就留到以后在添加吧。
 
-### 小说列表获取
+### 1.小说列表获取
 
 ![image-20200827175207816](readme.assets/image-20200827175207816.png)
 
 
 
-![image-20200827175317809](readme.assets/image-20200827175317809.png)		这个网站要找到想要的小说只能通过图中的搜索栏，通过观察，搜索结果页的网址构成是有规律的：
+![image-20200827175317809](readme.assets\image-20200827175317809.png)		这个网站要找到想要的小说只能通过图中的搜索栏，通过观察，搜索结果页的网址构成是有规律的：
 
 'https://www.qb5.tw/modules/article/search.php?searchkey='+编码后的关键字，为了将其编码，编写以下函数：
 
@@ -68,7 +68,7 @@ def Find_Novel(self,novel_name):              #function: find the novel  paramet
 
 
 
-### 小说章节列表获取
+### 2.小说章节列表获取
 
 ```python
 def Get_chapter_list(self):
@@ -103,13 +103,13 @@ def Download_img(self):        #Download the cover of the novel
 
 
 
-![image-20200827182950449](readme.assets/image-20200827182950449.png)
+![image-20200827182950449](readme.assets\image-20200827182950449.png)
 
 ​		每本小说都如图，正文开始前都有最新章节列表，这对于我们来说是干扰项，在获取章节列表时，需要过滤这几章，不难发现，最新列表最多有12章，当总章节大于24章是，最新列表有十二章，我们去掉获取的章节中的前十二章就可以了，当总章节小于24时，相当于小说的每一章在正文列表和最新章节列表里各出现了一遍，因此，总章节数一定是偶数，因此，直接去掉总章节的前一半就好了。
 
-### 小说下载
+### 3.小说下载
 
-为了便于下载，我将小说分章下载，这样便于下载是使用多线程。
+​		为了便于下载，我将小说分章下载，这样便于下载是使用多线程。
 
 ```python
 class Consumer(threading.Thread):       
@@ -145,7 +145,7 @@ class Consumer(threading.Thread):
             print('已下载：' + chapter_info[0]+' 时间：'+time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
 ```
 
-将章节下载函数重写进threading类，便于多线程的开启，为了防止线程重复访问相同章节，我将章节信息全部放入队列中，相当于给资源加了锁，只能访问一次。
+​		将章节下载函数重写进threading类，便于多线程的开启，为了防止线程重复访问相同章节，我将章节信息全部放入队列中，相当于给资源加了锁，只能访问一次。
 
 ```python
 def get_queue(self):                   #function : put chapters into a queue
@@ -212,11 +212,11 @@ def Download_Novel(self):
 
 ## 用户界面
 
-![image-20200827190712655](readme.assets/image-20200827190712655.png)
+![image-20200827190712655](readme.assets\image-20200827190712655.png)
 
 ​		该界面使用pyqt designer创建，然后使用pyuic生成python代码。信息的交互由按钮和列表的点击事件触发，点击事件的触发主要是通过以下函数。
 
-### 搜索按钮的点击
+### 1.搜索按钮的点击
 
 ```python
 def Serarch_clicked(ui,download):
@@ -231,11 +231,11 @@ def Search_clicked_thread(ui,download):
     ui.novel_list.addItems(download.items)
 ```
 
-为了使得界面流畅，各个事件单独使用一个线程来运行，当点击搜索按钮时，会触发Serarch_clicked()函数，此时会调用之前编写的Find_Novel()函数,根据搜索框中的关键字进行检索。得到检索内容后，将会把检索到的小说名称显示到UI界面中小说列表框里。
+​		为了使得界面流畅，各个事件单独使用一个线程来运行，当点击搜索按钮时，会触发Serarch_clicked()函数，此时会调用之前编写的Find_Novel()函数,根据搜索框中的关键字进行检索。得到检索内容后，将会把检索到的小说名称显示到UI界面中小说列表框里。
 
 
 
-### 小说列表的点击
+### 2.小说列表的点击
 
 ```python
 def Get_novel(ui,download):   #get all imformation of the choosed novel
@@ -276,7 +276,7 @@ def Novel_clicked_thread(ui,download):
 
 ​		当小说列表里的某一行被点击时，此函数会被调用，此函数主要用于产生多个线程来打印信息到UI界面中。值得注意的是，函数Get_novel()必须要先于其他几个函数完成，因此其他三个函数所用到的信息都由函数Get_novel()生成，因此，函数Get_novel()不能放入与其他三个函数并行的线程中，且必须先于其他函数完成，因此，将Get_novel()放入主线程，在此函数结束时，在创建用于信息展示的线程。
 
-### 下载按钮的点击
+### 3.下载按钮的点击
 
 ​		下载分为全本下载和部分章节下载，当选择部分下载时，须在文本框中输入下载的章节索引。
 
@@ -295,7 +295,7 @@ def downPart_clicked(ui,download):
 
 ​		以上两个函数在分别在点击全本下载按钮和下载按钮是调用，因为下载时已经启用了其他线程，因此，这两个函数不会占用主线程太久。两个函数都是通过调用Download_Novel()函数启动下载，不同点在于传入的参数不同，部分下载还需传入起始和终止索引。
 
-### 过程信息打印
+### 4.过程信息打印
 
 ​		为了在UI界面中实时显示进程 信息，我将函数print()的输出重定向到了UI界面上。
 
@@ -327,7 +327,7 @@ class myStdout():
 
 
 
-### 主函数
+### 5.主函数
 
 ```python
 if __name__ == '__main__':
@@ -349,30 +349,67 @@ if __name__ == '__main__':
 
 
 
+
+
+## 2020.08.28更新
+
+1.修复了当搜索结果为1时，获取到的小说昵称后有一空格导致无法创建文件及目录的问题：
+
+```python
+name=name.split()[0]
+```
+
+​		在函数Find_Novel()里加入这一行代码，去掉空格
+
+2.加入章节合并功能
+
+```python
+def Merged_chapters(self):
+    filenames = os.listdir(self.chapters_path)
+    regular = r'\d+'
+    filenames.sort(key=lambda x: int(re.findall(regular, x)[0]))
+    with open(self.save_path+self.novel_name+'.txt', 'w', encoding='utf-8') as novel:
+        for filename in filenames:
+            filepath = self.chapters_path +'\\'+ filename
+            for line in open(filepath, encoding='utf-8'):
+                novel.writelines(line)
+            novel.write('\n')
+            print('已合并：' + filename)
+```
+
+​		遍历存储章节的文件夹，将里面的文件全部写入新的文件，为了按正确的章节顺序写入文件，在读写前先进行排序，排序按章节标题最前面的数字，该数字的获取使用正则表达式
+
+
+
 ## 开发过程中有参考性的文档
 
-### 多线程：
+### 1.多线程：
 
 * https://zhuanlan.zhihu.com/p/62988456  
 * https://www.jianshu.com/p/c7c2fb69137b (最有价值)
 * https://blog.csdn.net/aojiancc2/article/details/83781140?utm_medium=distribute.pc_relevant.none-task-blog-title-1&spm=1001.2101.3001.4242
 
-### 编码：
+### 2.编码：
 
 * https://blog.csdn.net/qq_38607035/article/details/82594822
 
-### pyqt使用：
+### 3.pyqt使用：
 
 * https://www.tutorialspoint.com/pyqt/pyqt_qlistwidget.htm （list weight 文档）
 
-### print重定向到pyqt：
+### 4.print重定向到pyqt：
 
 * https://blog.csdn.net/LaoYuanPython/article/details/105316856
 
-### beautifulsoup：
+### 5.beautifulsoup：
 
 * https://blog.csdn.net/xudailong_blog/article/details/80398258?utm_source=blogxgwz6 (.next_sibling的使用)
 
-### 禁止窗口拉伸：
+### 6.禁止窗口拉伸：
 
 * https://www.cnblogs.com/Javauser/p/8951863.html
+
+### 7.文件合并
+
+* 文件排序 https://www.cnblogs.com/chester-cs/p/12252358.html
+* 文件合并 https://blog.csdn.net/qq_24326765/article/details/82556085
